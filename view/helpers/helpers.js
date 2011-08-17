@@ -214,11 +214,28 @@ $.extend($.EJS.Helpers.prototype, {
 	    html_options.id  = html_options.id  || name;
 	    //html_options.value = value;
 		html_options.name = name;
+    if (html_options.hasOwnProperty('include_blank')){
+      choices.unshift({text: ((html_options.include_blank == true ) ? '' : html_options.include_blank), value: ''});
+      delete html_options['include_blank'];
+    }
 	    var txt = '';
 	    txt += this.start_tag_for('select', html_options);
-	    for(var i = 0; i < choices.length; i++)
+	    var prevGroupOn = null;
+
+      if (choices[0] && choices[0].hasOwnProperty('groupOn')){
+        txt += this.start_tag_for('optgroup', {label: choices[0].groupLabel});
+        prevGroupOn = choices[0].groupOn
+      }
+      for(var i = 0; i < choices.length; i++)
 	    {
-	        var choice = choices[i];
+        var choice = choices[i];
+
+      if(choice.hasOwnProperty('groupOn') && choice.groupOn != prevGroupOn){
+        txt += this.tag_end('optgroup');
+        txt += this.start_tag_for('optgroup', {label: choice.groupLabel});
+        prevGroupOn = choice.groupOn
+      }
+
 	        if(typeof choice == 'string') choice = {value: choice};
 			if(!choice.text) choice.text = choice.value;
 			if(!choice.value) choice.text = choice.text;
@@ -317,8 +334,8 @@ $.extend($.EJS.Helpers.prototype, {
 		options = options || {};
 		options.src = steal.root.join("resources/images/"+image_location);
 		return this.single_tag_for('img', options);
-	}
-	
+	},
+
 });
 
 $.EJS.Helpers.prototype.text_tag = $.EJS.Helpers.prototype.text_area_tag;
