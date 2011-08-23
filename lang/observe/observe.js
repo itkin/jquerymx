@@ -51,12 +51,14 @@ var isArray =  $.isArray,
 	},
 	sendCollection = function(){
 		var len = collecting.length,
+			items = collecting.slice(0),
 			cur;
+		collecting = null;
 		for(var i =0; i < len; i++){
-			cur = collecting[i];
+			cur = items[i];
 			$(cur.t).trigger(cur.ev, cur.args)
 		}
-		collecting = null
+		
 	};
 	
 
@@ -65,7 +67,7 @@ var isArray =  $.isArray,
 // set - property value changed
 /**
  * @class jQuery.Observe
- * 
+ * @parent jquerymx.lang
  * Provides observable behavior on JSON-like data structures.
  * 
  *     new $.Observe({ 
@@ -86,7 +88,11 @@ var isArray =  $.isArray,
  * @param {Object} obj a JavaScript Object that will be 
  * converted to an observable
  */
-$.Class('jQuery.Observe',{
+$.Class('jQuery.Observe',
+/**
+ * @prototype
+ */
+{
 	init : function(obj){
 		this._namespace = ".observe"+(++id);
 		var self = this;
@@ -103,6 +109,12 @@ $.Class('jQuery.Observe',{
 		
 		this._data = obj;
 	},
+	/**
+	 * Get or set an attribute
+	 * @param {String} attr
+	 * @param {Object} [val]
+	 * @return {Object} the observable or the attribute property
+	 */
 	attr : function(attr, val){
 		if(val === undefined){
 			return this._get(attr)
@@ -113,6 +125,10 @@ $.Class('jQuery.Observe',{
 			return this;
 		}
 	},
+	/**
+	 * Removes a property
+	 * @param {String} attr
+	 */
 	removeAttr : function(attr){
 		var parts = isArray(attr) ? attr : attr.split("."),
 			prop = parts.shift()
@@ -166,14 +182,23 @@ $.Class('jQuery.Observe',{
 			throw "jQuery.Observe: set a property on an object that does not exist"
 		}		
 	},
+	/**
+	 * Listen to changes in this observable
+	 */
 	bind : function(){
 		$.fn.bind.apply($([this]),arguments);
 		return this;
 	},
+	/**
+	 * 
+	 */
 	unbind : function(){
 		$.fn.unbind.apply($([this]),arguments);
 		return this;
 	},
+	/**
+	 * get the raw data of this observable
+	 */
 	serialize : function(){
 		var obj = {}, val;
 		for(var prop in this._data){
@@ -182,6 +207,11 @@ $.Class('jQuery.Observe',{
 		}
 		return obj;
 	},
+	/**
+	 * Set multiple properties on the observable
+	 * @param {Object} props
+	 * @param {Boolean} remove true if you should remove properties that are not in props
+	 */
 	attrs : function(props, remove){
 		// copy
 		props = $.extend(true, {}, props);
@@ -216,14 +246,27 @@ $.Class('jQuery.Observe',{
 		}
 	}
 })
-
-jQuery.Observe('jQuery.Observe.List', {
+/**
+ * @class jQuery.Observe.List
+ * @inherits jQuery.Observe
+ * @parent jQuery.Observe
+ * An observable list
+ * 
+ */
+jQuery.Observe('jQuery.Observe.List', 
+/**
+ * @prototype
+ */
+{
 	init : function(instances){
 		this.length = 0;
 		this._namespace = ".list"+(++id);
         this.push.apply(this, $.makeArray(instances || [] ) );
 		this._data = this;
 	},
+	/**
+	 * Add items to the list
+	 */
 	push: function(){
 		var args = getArgs(arguments),
 			self = this;
@@ -248,6 +291,11 @@ jQuery.Observe('jQuery.Observe.List', {
 		}
 		return arr;
 	},
+	/**
+	 * Remove items from the list
+	 * @param {Object} index
+	 * @param {Object} count
+	 */
 	splice : function(index, count){
 		var args = $.makeArray(arguments);
 
