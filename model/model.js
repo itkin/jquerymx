@@ -766,15 +766,21 @@ steal('jquery/class', 'jquery/lang').then(function() {
 			if (!attributes ) {
 				return null;
 			}
+
 			if( attributes instanceof this){
 				attributes = attributes.serialize();
 			}
-			return new this(
+			var instance = new this(
 				// checks for properties in an object (like rails 2.0 gives);
 				isObject(attributes[this._shortName]) ||
 				isObject(attributes.data) || 
 				isObject(attributes.attributes) || 
 				attributes);
+      if (this.list && instance[this.id] != undefined){
+        this.list.remove(instance)
+        this.list.push(instance)
+      }
+      return instance
 		},
 		/**
 		 * @function wrapMany
@@ -1324,17 +1330,17 @@ steal('jquery/class', 'jquery/lang').then(function() {
 			}
 			callback && callback.apply(this, args);
 
-			//if this class has a global list, add / remove from the list.
-			if ( property === Class.id && val !== null && Class.list ) {
-				// if we didn't have an old id, add ourselves
-				if (!old ) {
-					Class.list.push(this);
-				} else if ( old != val ) {
-					// if our id has changed ... well this should be ok
-					Class.list.remove(old);
-					Class.list.push(this);
-				}
-			}
+//			//if this class has a global list, add / remove from the list.
+//			if ( property === Class.id && val !== null && Class.list ) {
+//				// if we didn't have an old id, add ourselves
+//				if (!old ) {
+//					Class.list.push(this);
+//				} else if ( old != val ) {
+//					// if our id has changed ... well this should be ok
+//					Class.list.remove(old);
+//					Class.list.push(this);
+//				}
+//			}
 
 		},
 		/**

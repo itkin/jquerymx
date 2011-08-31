@@ -215,7 +215,7 @@ $.extend($.EJS.Helpers.prototype, {
 	    //html_options.value = value;
 		html_options.name = name;
     if (html_options.hasOwnProperty('include_blank')){
-      choices.unshift({text: (html_options.include_blank || ''), value: ''});
+      choices.unshift({text: ((html_options.include_blank == true ) ? '' : html_options.include_blank), value: ''});
       delete html_options['include_blank'];
     }
 	    var txt = '';
@@ -334,7 +334,7 @@ $.extend($.EJS.Helpers.prototype, {
 		options = options || {};
 		options.src = steal.root.join("resources/images/"+image_location);
 		return this.single_tag_for('img', options);
-	},
+	}
 
 });
 
