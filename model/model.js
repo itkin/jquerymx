@@ -91,7 +91,7 @@ steal('jquery/class', 'jquery/lang/string', function() {
 				reject = function(data){
 					deferred.rejectWith(self, [data])
 				},
-				args = [self.serialize(), resolve, reject];
+				args = [self.serialize(true), resolve, reject];
 				
 			if(type == 'destroy'){
 				args.shift();
@@ -1033,7 +1033,8 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			}
 		},
 		bind: bind,
-		unbind: unbind
+		unbind: unbind,
+    backendSerialize: {}
 	},
 	/**
 	 * @Prototype
@@ -1398,7 +1399,14 @@ steal('jquery/class', 'jquery/lang/string', function() {
         if ( attrs.hasOwnProperty(attr) ) {
           type = attrs[attr];
           converter = Class.serialize[type] || Class.serialize['default'];
-          data[attr] = converter( this[attr] , type );
+          if (backend && Class.backendSerialize.hasOwnProperty(attr)){
+            instruction = Class.backendSerialize[attr]
+            if (instruction != false && (!instruction['if'] || (instruction['if'].call(this, this[attr])))){
+              data[instruction['key'] || attr] = converter( this[attr] , type );
+            }
+          } else {
+            data[attr] = converter( this[attr] , type );
+          }
         }
       }
       return data;
