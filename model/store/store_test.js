@@ -9,85 +9,7 @@ module("store", {
 	}
 });
 
-test("same", function(){
-	
-	
-	ok( $.Object.same({type: "FOLDER"},{type: "FOLDER", count: 5}, {
-		count: null
-	}), "count ignored" );
-	
-	ok( $.Object.same({type: "folder"},{type: "FOLDER"}, {
-		type: "i"
-	}), "folder case ignored" );
-})
 
-test("subsets", function(){
-	
-	var res1 = $.Object.subsets({parentId: 5, type: "files"},
-		[{parentId: 6}, {type: "folders"}, {type: "files"}]);
-		
-	same(res1,[{type: "files"}])
-	
-	var res2 = $.Object.subsets({parentId: 5, type: "files"},
-		[{}, {type: "folders"}, {type: "files"}]);
-		
-	same(res2,[{},{type: "files"}]);
-	
-	var res3 = $.Object.subsets({parentId: 5, type: "folders"},
-		[{parentId: 5},{type: "files"}]);
-		
-	same(res3,[{parentId: 5}])
-});
-
-test("subset compare", function(){
-	
-	ok( $.Object.subset(
-		{type: "FOLDER"},
-		{type: "FOLDER"}), 
-		
-		"equal sets" );
-	
-	ok( $.Object.subset(
-		{type: "FOLDER", parentId: 5},
-		{type: "FOLDER"}), 
-		
-		"sub set" );
-	
-	ok(! $.Object.subset(
-		{type: "FOLDER"},
-		{type: "FOLDER", parentId: 5}), 
-		
-		"wrong way" );
-	
-	
-	ok(! $.Object.subset(
-		{type: "FOLDER", parentId: 7},
-		{type: "FOLDER", parentId: 5}), 
-		
-		"different values" );
-
-	ok( $.Object.subset(
-		{type: "FOLDER", count: 5}, // subset
-		{type: "FOLDER"},
-		{count: null} ), 
-		
-		"count ignored" );
-	
-	
-	ok( $.Object.subset(
-		{type: "FOLDER", kind: "tree"}, // subset
-		{type: "FOLDER", foo: true, bar: true },
-		{foo: null, bar: null} ), 
-		
-		"understands a subset" );
-	ok( $.Object.subset(
-		{type: "FOLDER", foo: true, bar: true },
-		{type: "FOLDER", kind: "tree"}, // subset
-		
-		{foo: null, bar: null, kind : null} ), 
-		
-		"ignores nulls" );
-})
 
 /*
 test("smart findAll", function(){
@@ -203,7 +125,7 @@ test("Store Remove", function(){
 	var list = Item.Store.findAll({parentId: 1}),
 		len = 0,
 		first;
-	stop();
+	stop(2000);
 	list.bind("add", function(ev, items){
 		ok(items.length, "there should be items");
 		len = items.length;
@@ -216,6 +138,61 @@ test("Store Remove", function(){
 		start();
 	})
 });
+
+test("Store Update", function(){
+	$.fixture.make('item',40, function(i){
+		return {
+			name: "Name "+i,
+			parentId: i%4+1
+		}
+	})
+	
+	$.Model('Item',{},{});
+	$.Model.List('Item.List');
+	$.Model.Store('Item.Store',{
+		compare : {
+			count : null
+		}
+	},{});
+	
+	var list1 = Item.Store.findAll({parentId: 1}),
+		list2 = Item.Store.findAll({parentId: 2}),
+		len = 0,
+		first;
+		
+	stop(2000);
+	var def1 = $.Deferred(),
+		def2 = $.Deferred(),
+		first,
+		updating;
+		
+	list1.bind("add", function(ev, items){
+		console.log("1 added")
+		def1.resolve(true)
+		first = items[0]
+	});
+	list1.bind("remove", function(ev, items){
+		console.log("1 removed")
+		equals(items[0].id, first.id, "first removed")
+	})
+	list2.bind("add", function(ev, items){
+		console.log("2 added")
+		if(!updating){
+			def2.resolve(true);
+		} else {
+			equals(items[0].id, first.id, "item added to second list")
+			start();
+		}
+	});
+	
+	$.when(def1, def2).then(function(){
+		console.log('both ready')
+		updating = true;
+		first.updated({parentId: 2})
+	});
+	
+});
+
 
 
 });
