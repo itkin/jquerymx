@@ -405,32 +405,3 @@ test("serialize", function(){
 	}).serialize().createdAt, "feb", "serialized")
 });
 
-test("backendSerialize", function(){
-  $.Model('User');
-	$.Model("Task",{
-		attributes: {
-			user1: 'User.model',
-      user2: 'User.model',
-      user3: 'User.model'
-		},
-    backendSerialize:{
-      user1: {
-        "if": function(user){ return this.isNew() || user.isNew() },
-        "key": "user_attributes"
-      },
-      user2: {
-        key: 'user_2_attributes'
-      },
-      user3: false
-		}
-	},{});
-	var obj = new Task({
-		user1: { name: "test1" },
-    user2: { name: "test2" },
-    user3: { name: "test3" }
-	}).serialize(true)
-  equal(obj.user_attributes.name, "test1")
-  equal(obj.user_2_attributes.name, "test2")
-  ok(!obj.hasOwnProperty('user3'))
-
-});
