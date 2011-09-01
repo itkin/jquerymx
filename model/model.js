@@ -91,7 +91,7 @@ steal('jquery/class', 'jquery/lang').then(function() {
 				reject = function(data){
 					deferred.rejectWith(self, [data])
 				},
-				args = [self.serialize(), resolve, reject];
+				args = [self.serialize(true), resolve, reject];
 				
 			if(type == 'destroy'){
 				args.shift();
@@ -1033,7 +1033,8 @@ steal('jquery/class', 'jquery/lang').then(function() {
 			}
 		},
 		bind: bind,
-		unbind: unbind
+		unbind: unbind,
+    backendSerialize: {}
 	},
 	/**
 	 * @Prototype
@@ -1383,25 +1384,33 @@ steal('jquery/class', 'jquery/lang').then(function() {
 			}
 			return attributes;
 		},
-		serialize : function(){
-			var Class = this.Class,
-				attrs = Class.attributes,
-				type,
-				converter,
-				data = {},
-				attr;
+		serialize : function(backend){
+      var Class = this.Class,
+        attrs = Class.attributes,
+        type,
+        converter,
+        data = {},
+        attr,
+        instruction;
 
-				attributes = {};
-				
-			for ( attr in attrs ) {
-				if ( attrs.hasOwnProperty(attr) ) {
-					type = attrs[attr];
-					converter = Class.serialize[type] || Class.serialize['default'];
-					data[attr] = converter( this[attr] , type );
-				}
-			}
-			return data;
-		},
+        attributes = {};
+
+      for ( attr in attrs ) {
+        if ( attrs.hasOwnProperty(attr) ) {
+          type = attrs[attr];
+          converter = Class.serialize[type] || Class.serialize['default'];
+          if (backend && Class.backendSerialize.hasOwnProperty(attr)){
+            instruction = Class.backendSerialize[attr]
+            if (instruction != false || (instruction['if'] && instruction['if'].call(this, this[attr]))){
+              data[instruction['key'] || attr] = converter( this[attr] , type );
+            }
+          } else {
+            data[attr] = converter( this[attr] , type );
+          }
+        }
+      }
+      return data;
+    },
 		/**
 		 * Returns if the instance is a new object.  This is essentially if the
 		 * id is null or undefined.

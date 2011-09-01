@@ -405,3 +405,20 @@ test("serialize", function(){
 	}).serialize().createdAt, "feb", "serialized")
 });
 
+test("backendSerialize", function(){
+  $.Model('User');
+	$.Model("Task",{
+		attributes: {
+			user: 'User.model'
+		},
+    backendSerialize:{
+      user: {
+        "if": function(user){ return this.isNew() || user.isNew() },
+        "key": "user_attributes"
+      }
+		}
+	},{});
+	equals(new Task({
+		user: { name: "test" }
+	}).serialize(true).user_attributes.name, "test", "serialized")
+});
