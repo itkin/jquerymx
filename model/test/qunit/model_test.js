@@ -409,16 +409,28 @@ test("backendSerialize", function(){
   $.Model('User');
 	$.Model("Task",{
 		attributes: {
-			user: 'User.model'
+			user1: 'User.model',
+      user2: 'User.model',
+      user3: 'User.model'
 		},
     backendSerialize:{
-      user: {
+      user1: {
         "if": function(user){ return this.isNew() || user.isNew() },
         "key": "user_attributes"
-      }
+      },
+      user2: {
+        key: 'user_2_attributes'
+      },
+      user3: false
 		}
 	},{});
-	equals(new Task({
-		user: { name: "test" }
-	}).serialize(true).user_attributes.name, "test", "serialized")
+	var obj = new Task({
+		user1: { name: "test1" },
+    user2: { name: "test2" },
+    user3: { name: "test3" }
+	}).serialize(true)
+  equal(obj.user_attributes.name, "test1")
+  equal(obj.user_2_attributes.name, "test2")
+  ok(!obj.hasOwnProperty('user3'))
+
 });

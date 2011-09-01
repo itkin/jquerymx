@@ -1401,7 +1401,7 @@ steal('jquery/class', 'jquery/lang/string', function() {
           converter = Class.serialize[type] || Class.serialize['default'];
           if (backend && Class.backendSerialize.hasOwnProperty(attr)){
             instruction = Class.backendSerialize[attr]
-            if (instruction != false || (instruction['if'] && instruction['if'].call(this, this[attr]))){
+            if (instruction != false && (!instruction['if'] || (instruction['if'].call(this, this[attr])))){
               data[instruction['key'] || attr] = converter( this[attr] , type );
             }
           } else {
