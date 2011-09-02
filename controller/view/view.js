@@ -10,7 +10,7 @@ steal('jquery/controller', 'jquery/view').then(function( $ ) {
 			classPartsWithoutPrefix.splice(0, 2); // Remove prefix (usually 2 elements)
 
 		var classPartsWithoutPrefixSlashes = classPartsWithoutPrefix.join('/'),
-			hasControllers = (classParts.length > 2) && classParts[1] == 'Controllers',
+			hasControllers = false, //(classParts.length > 2) && classParts[1] == 'Controllers',
 			path = hasControllers? jQuery.String.underscore(classParts[0]): jQuery.String.underscore(classParts.join("/")),
 			controller_name = classPartsWithoutPrefix.join('/').toLowerCase(),
 			suffix = (typeof view == "string" && /\.[\w\d]+$/.test(view)) ? "" : jQuery.View.ext;
