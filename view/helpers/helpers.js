@@ -209,7 +209,8 @@ $.extend($.EJS.Helpers.prototype, {
 	 * @param {Object} choices
 	 * @param {Object} html_options
 	 */
-    select_tag: function( name, value, choices, html_options ) {     
+    select_tag: function( name, value, choices, html_options ) {
+      var values = $.isArray(value) ? value : [value];
 	    html_options = html_options || {};
 	    html_options.id  = html_options.id  || name;
 	    //html_options.value = value;
@@ -241,7 +242,7 @@ $.extend($.EJS.Helpers.prototype, {
 			if(!choice.value) choice.text = choice.text;
 			
 			var optionOptions = {value: choice.value};
-	        if(choice.value == value)
+	        if($.inArray(choice.value, values) != -1)
 	            optionOptions.selected ='selected';
 	        txt += this.start_tag_for('option', optionOptions )+choice.text+this.tag_end('option');
 	    }
