@@ -104,7 +104,8 @@ steal('jquery/controller', 'jquery/view').then(function( $ ) {
 		view = jQuery.Controller._calculatePosition(this.Class, view, this.called);
 
 		//calculate data
-		data = data || this;
+    var self = this;
+		data = data? $.extend({},data,{view: function(){ return self.view.apply(self, arguments)}}) : this;
 
 		//calculate helpers
 		var helpers = calculateHelpers.call(this, myhelpers);
