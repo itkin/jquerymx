@@ -1,7 +1,37 @@
 /**
  * @page jquerymx.lang Language Helpers
  * @parent jquerymx
- * JavaScriptMVC has a number of language helpers.
+ * JavaScriptMVC has several lightweight language helper plugins.
+ * 
+ * ## Object
+ * 
+ * Methods useful for comparing Objects. For example, if two
+ * objects are the same:
+ * 
+ *     $.Object.same({foo: "bar"}, {foo: "bar"});
+ *     
+ * ## Observe
+ * 
+ * Makes an Object's properties observable:
+ * 
+ *     var person = new $.Observe({ name: "Justin" })
+ *     person.bind('change', function(){ ... })
+ *     person.attr('name', "Brian");
+ *     
+ * ## String
+ * 
+ * String helpers capitalize, underscore, and perform similar manipulations
+ * on strings.  They can also lookup a value in an object:
+ * 
+ *    $.String.getObject("foo.bar",{foo: {bar: "car"}})
+ * 
+ * ## toJSON
+ * 
+ * Used to create or consume JSON strings.
+ * 
+ * ## Vector
+ * 
+ * Used for vector math.
  */
 //string helpers
 steal('jquery').then(function( $ ) {
@@ -63,7 +93,21 @@ steal('jquery').then(function( $ ) {
 		 * @class jQuery.String
 		 * @parent jquerymx.lang
 		 * 
-		 * A collection of useful string helpers.
+		 * A collection of useful string helpers. Available helpers are:
+		 * <ul>
+		 *   <li>[jQuery.String.capitalize|capitalize]: Capitalizes a string (some_string &raquo; Some_string)</li>
+		 *   <li>[jQuery.String.camelize|camelize]: Capitalizes a string from something undercored 
+		 *       (some_string &raquo; someString, some-string &raquo; someString)</li>
+		 *   <li>[jQuery.String.classize|classize]: Like [jQuery.String.camelize|camelize], 
+		 *       but the first part is also capitalized (some_string &raquo; SomeString)</li>
+		 *   <li>[jQuery.String.niceName|niceName]: Like [jQuery.String.classize|classize], but a space separates each 'word' (some_string &raquo; Some String)</li>
+		 *   <li>[jQuery.String.underscore|underscore]: Underscores a string (SomeString &raquo; some_string)</li>
+		 *   <li>[jQuery.String.sub|sub]: Returns a string with {param} replaced values from data.
+		 *       <code><pre>
+		 *       $.String.sub("foo {bar}",{bar: "far"})
+		 *       //-> "foo far"</pre></code>
+		 *   </li>
+		 * </ul>
 		 * 
 		 */
 		str = $.String = $.extend( $.String || {} , {
@@ -71,7 +115,8 @@ steal('jquery').then(function( $ ) {
 			 * @function
 			 * Gets an object from a string.
 			 * @param {String} name the name of the object to look for
-			 * @param {Array} [roots] an array of root objects to look for the name
+			 * @param {Array} [roots] an array of root objects to look for the 
+			 *   name.  If roots is not provided, the window is used.
 			 * @param {Boolean} [add] true to add missing objects to 
 			 *  the path. false to remove found properties. undefined to 
 			 *  not modify the root object
@@ -99,7 +144,7 @@ steal('jquery').then(function( $ ) {
 				return s.charAt(0).toLowerCase() + s.substr(1);
 			},
 			/**
-			 * Like camelize, but the first part is also capitalized
+			 * Like [jQuery.String.camelize|camelize], but the first part is also capitalized
 			 * @param {String} s
 			 * @return {String} the classized string
 			 */
