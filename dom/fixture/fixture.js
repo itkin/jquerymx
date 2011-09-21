@@ -162,11 +162,12 @@ steal('jquery/dom',
             }
 			
             if(id === undefined){
-                id = settings.url.replace(/\/(\w+)(\/|$)/g, function(all, num){
-                    if(num != 'update'){
-                        id = num;
-                    }
-                })
+                  id = settings.url.match(/\d+(?=(\.json))/) && settings.url.match(/\d+(?=(\.json))/)[0]
+//                id = settings.url.replace(/\/(\w+)(\/|$)/g, function(all, num){
+//                    if(num != 'update'){
+//                        id = num;
+//                    }
+//                })
             }
 			
 			if(id === undefined){ // if still not set, guess a random number
