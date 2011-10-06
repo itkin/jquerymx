@@ -1036,7 +1036,8 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			var res = getList(this.List),
 				arr = isArray(instancesRawData),
 				ml = ($.Model.List && instancesRawData instanceof $.Model.List),
-				raw = arr ? instancesRawData : (ml ? instancesRawData.serialize() : instancesRawData.data),
+        po = $.isPlainObject(instancesRawData) && !instancesRawData.hasOwnProperty('data'), // po as plain object with index as iterator ( allow {0=>item_attrs,1=>item_attrs, etc..} )
+				raw = arr ? instancesRawData : (ml ? instancesRawData.serialize() : ( po ? $.map(instancesRawData, function(v){return v}) : instancesRawData.data )),
 				length = raw.length,
 				i = 0;
 			//@steal-remove-start
@@ -1048,7 +1049,7 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			for (; i < length; i++ ) {
 				res.push(this.model(raw[i]));
 			}
-			if (!arr ) { //push other stuff onto array
+			if (!arr && !po ) { //push other stuff onto array
 				for ( var prop in instancesRawData ) {
 					if ( prop !== 'data' ) {
 						res[prop] = instancesRawData[prop];
