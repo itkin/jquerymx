@@ -105,11 +105,11 @@ steal('jquery/controller', 'jquery/view').then(function( $ ) {
 
 		//calculate data
     var self = this;
-		data = data? $.extend({},data,{view: function(){ return self.view.apply(self, arguments)}}) : this;
+		data = data? data : this;
 
 		//calculate helpers
 		var helpers = calculateHelpers.call(this, myhelpers);
-
+    $.extend(helpers,{view: function(){ return self.view.apply(self, arguments)}})
 
 		return jQuery.View(view, data, helpers); //what about controllers in other folders?
 	};
