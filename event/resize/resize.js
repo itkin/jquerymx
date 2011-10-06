@@ -129,8 +129,13 @@ steal('jquery/event').then(function( $ ) {
 					// if index == -1 it's the window
 					while (++index < length && (child = resizers[index]) && (isWindow || $.contains(where, child)) ) {
 
-						// call the event
-						$.event.handle.call(child, ev);
+            if($(child).is(':visible')){
+              // call the event
+              $.event.handle.call(child, ev);
+            } else {
+              ev.stopPropagation()
+            }
+
 
 						if ( ev.isPropagationStopped() ) {
 							// move index until the item is not in the current child
