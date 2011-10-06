@@ -522,7 +522,8 @@ steal('jquery/dom',
 		 *     }
 		 * 
 		 */
-		make: function( types, count, make, filter ) {
+		make: function( types, count, make, filter, preventAutoFiltering ) {
+      preventAutoFiltering = $.makeArray(preventAutoFiltering)
 			if(typeof types === "string"){
 				types = [types+"s",types ]
 			}
@@ -593,7 +594,8 @@ steal('jquery/dom',
 				for ( var param in settings.data ) {
 					i=0;
 					if ( settings.data[param] !== undefined && // don't do this if the value of the param is null (ignore it)
-						(param.indexOf("Id") != -1 || param.indexOf("_id") != -1) ) {
+            $.inArray(param, preventAutoFiltering) == -1 &&
+            (param.indexOf("Id") != -1 || param.indexOf("_id") != -1) ) {
 						while ( i < retArr.length ) {
 							if ( settings.data[param] != retArr[i][param] ) {
 								retArr.splice(i, 1);
