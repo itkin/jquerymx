@@ -363,7 +363,14 @@ $.Class("jQuery.Model.List",
 		return this.map(function(item){
 			return item.serialize()
 		});
-	}
+	},
+  makeParams : function(nested){
+    return this.map(function(item){
+      //if (item.isDirty()){ // don t send back unchanged item
+        return item.makeParams(nested)
+      //}
+    });
+  }
 });
 
 var push = [].push,

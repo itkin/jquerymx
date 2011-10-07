@@ -91,7 +91,7 @@ steal('jquery/class', 'jquery/lang/string', function() {
 				reject = function(data){
 					deferred.rejectWith(self, [data])
 				},
-				args = [self.serialize(), resolve, reject],
+				args = [self.makeParams(), resolve, reject],
 				constructor = self.constructor;
 				
 			if(type == 'destroy'){
@@ -1056,6 +1056,8 @@ steal('jquery/class', 'jquery/lang/string', function() {
 				return isObject(val) && val.serialize ? val.serialize() : val;
 			}
 		},
+    params: {
+    },
 		bind: bind,
 		unbind: unbind
 	},
@@ -1335,6 +1337,11 @@ steal('jquery/class', 'jquery/lang/string', function() {
 				callback = success,
 				list = Class.list;
 
+//      // backup the initial state of the instance
+      if (!this._init && this.backup && !this._backupStore ){
+        this.backup()
+      }
+
 			val = this[property] = (value === null ? //if the value is null or undefined
 			null : // it should be null
 			converter.call(Class, value, function(){}, type)  //convert it to something useful
@@ -1445,25 +1452,62 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			}
 			return attributes;
 		},
-		serialize : function(){
-			var Class = this.constructor,
+		serialize : function(attr){
+			var self= this,
+        Class = this.constructor,
 				attrs = Class.attributes,
 				type,
 				converter,
 				data = {},
-				attr;
 
-				attributes = {};
-				
-			for ( attr in attrs ) {
-				if ( attrs.hasOwnProperty(attr) ) {
-					type = attrs[attr];
-					converter = Class.serialize[type] || Class.serialize['default'];
-					data[attr] = converter( this[attr] , type );
-				}
-			}
-			return data;
+        serialize = function(attr){
+          type = attrs[attr];
+          converter = Class.serialize[type] || Class.serialize['default'];
+          return converter( self[attr] , type );
+        };
+
+      if (attr){
+        return serialize(attr)
+      }
+
+      for ( attr in attrs ) {
+        if ( attrs.hasOwnProperty(attr) ) {
+          data[attr] = serialize(attr)
+        }
+      }
+      return data;
+
 		},
+    makeParams: function(nested){
+      var Class = this.constructor,
+				attrs = Class.attributes,
+        params = Class.params,
+        nested = nested || false,
+				type,
+				attr,
+        changed,
+        param,
+        data = {};
+
+      if (nested){
+        data[Class.id] = getId(this); //ensure id is set for nested assoc
+      }
+
+      for ( attr in attrs ){
+        param = params[attr] == undefined ? {} : params[attr];
+        type = attrs[attr];
+        changed = !this.changed || this.changed(attr) ;
+        if ( (param != false && changed)
+          && (!param['if'] || param['if'].call(this, this[attr],type) == true)
+          && (!param['unless'] || param['unless'].call(this, this[attr],type) == false) )
+        {
+          data[param['as'] || attr] =  isObject(this[attr]) && this[attr].makeParams ? this[attr].makeParams(true) : this.serialize(attr) ;
+        }
+      }
+
+      return data
+    },
+
 		/**
 		 * Returns if the instance is a new object.  This is essentially if the
 		 * id is null or undefined.
