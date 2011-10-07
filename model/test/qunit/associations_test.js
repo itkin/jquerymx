@@ -58,11 +58,11 @@ test("associations work", function(){
 	})
 	equals(c.person.name, "Justin", "association present");
 	equals(c.person.Class, MyTest.Person, "belongs to association typed");
-	
+
 	equals(c.issues.length, 0);
-	
+
 	equals(c.loans.length, 2);
-	
+
 	equals(c.loans[0].Class, MyTest.Loan);
 });
 
@@ -77,14 +77,14 @@ test("Model association serialize on save", function(){
 		loans : []
 	}),
 	cSave = c.save();
-	
+
 	stop();
 	cSave.then(function(customer){
 		start()
 		equals(customer.personAttr, "My name is thecountofzero", "serialization works");
-		
+
 	});
-	
+
 });
 
 test("Model.List association serialize on save", function(){
@@ -107,7 +107,7 @@ test("Model.List association serialize on save", function(){
 		]
 	}),
 	cSave = c.save();
-	
+
 	stop();
 	cSave.then(function(customer){
 		start()
@@ -115,7 +115,7 @@ test("Model.List association serialize on save", function(){
 		ok(customer.loansAttr._data === undefined, "_data does not exist");
 		ok(customer.loansAttr._use_call === undefined, "_use_call does not exist");
 		ok(customer.loansAttr._changed === undefined, "_changed does not exist");
-		
+
 	});
-	
+
 });

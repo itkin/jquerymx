@@ -147,7 +147,7 @@ test("objects in action", function(){
 		"{item} someEvent" : function(thing, ev){
 			ok(true, "called");
 			equals(ev.type, "someEvent","correct event")
-			equals(this.Class.fullName, "Thing", "This is a controller isntance")
+			equals(this.constructor.fullName, "Thing", "This is a controller isntance")
 			equals(thing.name,"Justin","Raw, not jQuery wrapped thing")
 		}
 	});
@@ -220,5 +220,25 @@ test("pluginName", function() {
 	ok(!ta.hasClass("my_plugin"), "Shouldn't have class my_plugin after being destroyed");
 	ok(ta.hasClass("existing_class"), "Existing class should still be there");
 })
+
+test("inherit defaults", function() {
+    $.Controller.extend("BaseController", {
+        defaults : {
+            foo: 'bar'
+        }
+    }, {});
+
+    BaseController.extend("InheritingController", {
+        defaults : {
+            newProp : 'newVal'
+        }
+    }, {});
+
+    ok(InheritingController.defaults.foo === 'bar', 'Class must inherit defaults from the parent class');
+    ok(InheritingController.defaults.newProp == 'newVal', 'Class must have own defaults');
+    var inst = new InheritingController($('<div/>'), {});
+    ok(inst.options.foo === 'bar', 'Instance must inherit defaults from the parent class');
+    ok(inst.options.newProp == 'newVal', 'Instance must have defaults of it`s class');
+});
 
 });

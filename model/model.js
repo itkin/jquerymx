@@ -66,7 +66,7 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			return new listType();
 		},
 		getId = function(inst){
-			return inst[inst.Class.id]
+			return inst[inst.constructor.id]
 		},
 		unique = function(items){
 	        var collect = [];
@@ -91,8 +91,9 @@ steal('jquery/class', 'jquery/lang/string', function() {
 				reject = function(data){
 					deferred.rejectWith(self, [data])
 				},
-				args = [self.serialize(true), resolve, reject];
-				
+				args = [self.makeParams(), resolve, reject],
+				constructor = self.constructor;
+
 			if(type == 'destroy'){
 				args.shift();
 			}	
@@ -104,7 +105,7 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			deferred.then(success);
 			deferred.fail(error);
 			
-			self.Class[type].apply(self.Class, args);
+			constructor[type].apply(constructor, args);
 				
 			return deferred.promise();
 		},
@@ -119,7 +120,8 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			}
 		},
 		bind = $method('bind'),
-		unbind = $method('unbind');
+		unbind = $method('unbind'),
+		STR_CONSTRUCTOR = 'constructor';
 	/**
 	 * @class jQuery.Model
 	 * @parent jquerymx
@@ -698,11 +700,12 @@ steal('jquery/class', 'jquery/lang/string', function() {
 				}
 			})
 
-			//add missing converters
-			if ( superClass.convert != this.convert ) {
-				this.convert = extend(superClass.convert, this.convert);
-			}
-
+			//add missing converters and serializes
+			each(["convert","serialize"],function( i, name ) {
+				if ( superClass[name] != self[name] ) {
+					self[name] = extend({}, superClass[name], self[name] );
+				}
+			});
 
 			this._fullName = underscore(this.fullName.replace(/\./g, "_"));
 			this._shortName = underscore(this.shortName);
@@ -732,11 +735,8 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			var converters = {},
 				convertName = "* "+this._shortName+".model";
 				
-			converters[convertName+"s"] = this.callback('models');
-			converters[convertName] = this.callback('model');	
-				
-			//converters[convertName+"s"] = this.models = this.callback(this.models);
-			//converters[convertName] = this.model = this.callback(this.model);
+			converters[convertName+"s"] = this.proxy('models');
+			converters[convertName] = this.proxy('model');	
 			
 			$.ajaxSetup({
 				converters : converters
@@ -792,29 +792,6 @@ steal('jquery/class', 'jquery/lang/string', function() {
 		 * 
 		 */
 		attributes: {},
-		/**
-		 * @function wrap
-		 * @hide
-		 * @tag deprecated
-		 * __warning__ : wrap is deprecated in favor of [jQuery.Model.static.model].  They 
-		 * provide the same functionality; however, model works better with Deferreds.
-		 * 
-		 * Wrap is used to create a new instance from data returned from the server.
-		 * It is very similar to doing <code> new Model(attributes) </code> 
-		 * except that wrap will check if the data passed has an
-		 * 
-		 * - attributes,
-		 * - data, or
-		 * - <i>singularName</i>
-		 * 
-		 * property.  If it does, it will use that objects attributes.
-		 * 
-		 * Wrap is really a convience method for servers that don't return just attributes.
-		 * 
-		 * @param {Object} attributes
-		 * @return {Model} an instance of the model
-		 */
-		// wrap place holder
 		/**
 		 * $.Model.model is used as a [http://api.jquery.com/extending-ajax/#Converters Ajax converter] 
 		 * to convert the response of a [jQuery.Model.static.findOne] request 
@@ -898,68 +875,6 @@ steal('jquery/class', 'jquery/lang/string', function() {
       }
       return instance
 		},
-		/**
-		 * @function wrapMany
-		 * @hide
-		 * @tag deprecated
-		 * 
-		 * __warning__ : wrapMany is deprecated in favor of [jQuery.Model.static.models].  They 
-		 * provide the same functionality; however, models works better with Deferreds.
-		 * 
-		 * $.Model.wrapMany converts a raw array of JavaScript Objects into an array (or [jQuery.Model.List $.Model.List]) of model instances.
-		 * 
-		 *     // a Recipe Model wi
-		 *     $.Model("Recipe",{
-		 *       squareId : function(){
-		 *         return this.id*this.id;
-		 *       }
-		 *     })
-		 * 
-		 *     var recipes = Recipe.wrapMany([{id: 1},{id: 2}])
-		 *     recipes[0].squareId() //-> 1
-		 * 
-		 * If an array is not passed to wrapMany, it will look in the object's .data
-		 * property.  
-		 * 
-		 * For example:
-		 * 
-		 *     var recipes = Recipe.wrapMany({data: [{id: 1},{id: 2}]})
-		 *     recipes[0].squareId() //-> 1
-		 * 
-		 * 
-		 * Often wrapMany is used with this.callback inside a model's [jQuery.Model.static.findAll findAll]
-		 * method like:
-		 * 
-		 *     findAll : function(params, success, error){
-		 *       $.get('/url',
-		 *             params,
-		 *             this.callback(['wrapMany',success]), 'json' )
-		 *     }
-		 * 
-		 * If you are having problems getting your model to callback success correctly,
-		 * make sure a request is being made (with firebug's net tab).  Also, you 
-		 * might not use this.callback and instead do:
-		 * 
-		 *     findAll : function(params, success, error){
-		 *       self = this;
-		 *       $.get('/url',
-		 *             params,
-		 *             function(data){
-		 *               var wrapped = self.wrapMany(data);
-		 *               success(wrapped)
-		 *             },
-		 *             'json')
-		 *     }
-		 * 
-		 * 
-		 * @param {Array} instancesRawData an array of raw name - value pairs like
-		 * 
-		 *     [{name: "foo", id: 4},{name: "bar", id: 5}]
-		 *     
-		 * @return {Array} a JavaScript array of instances or a [jQuery.Model.List list] of instances
-		 *  if the model list plugin has been included.
-		 */
-		// wrapMany placeholder
 		/**
 		 * $.Model.models is used as a [http://api.jquery.com/extending-ajax/#Converters Ajax converter] 
 		 * to convert the response of a [jQuery.Model.static.findAll] request 
@@ -1148,6 +1063,8 @@ steal('jquery/class', 'jquery/lang/string', function() {
 				return isObject(val) && val.serialize ? val.serialize() : val;
 			}
 		},
+    params: {
+    },
 		bind: bind,
 		unbind: unbind,
     backendSerialize: {}
@@ -1174,7 +1091,7 @@ steal('jquery/class', 'jquery/lang/string', function() {
 		setup: function( attributes ) {
 			// so we know not to fire events
 			this._init = true;
-			this.attrs(extend({},this.Class.defaults,attributes));
+			this.attrs(extend({},this.constructor.defaults,attributes));
 			delete this._init;
 		},
 		/**
@@ -1239,12 +1156,13 @@ steal('jquery/class', 'jquery/lang/string', function() {
 						}
 
 					});
-				};
+				},
+				validations = this.constructor.validations;
 
-			each(attrs || this.Class.validations || {}, function( attr, funcs ) {
+			each(attrs || validations || {}, function( attr, funcs ) {
 				if ( typeof attr == 'number' ) {
 					attr = funcs;
-					funcs = self.Class.validations[attr];
+					funcs = validations[attr];
 				}
 				addErrors(attr, funcs || []);
 			});
@@ -1401,7 +1319,7 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			// provides getter / setters
 			// 
 			if ( this[setName] && 
-				(value = this[setName](value, this.callback('_updateProperty', property, value, old, success, errorCallback), errorCallback)) === undefined ) {
+				(value = this[setName](value, this.proxy('_updateProperty', property, value, old, success, errorCallback), errorCallback)) === undefined ) {
 				return;
 			}
 			this._updateProperty(property, value, old, success, errorCallback);
@@ -1415,7 +1333,7 @@ steal('jquery/class', 'jquery/lang/string', function() {
 		 * @param {Object} success
 		 */
 		_updateProperty: function( property, value, old, success, errorCallback ) {
-			var Class = this.Class,
+			var Class = this.constructor,
 				val, type = Class.attributes[property] || Class.addAttr(property, Class.guessType(value)),
 				//the converter
 				converter = Class.convert[type] || Class.convert['default'],
@@ -1424,7 +1342,13 @@ steal('jquery/class', 'jquery/lang/string', function() {
 				global = "updated.",
 				args,
 				globalArgs,
-				callback = success;
+				callback = success,
+				list = Class.list;
+
+//      // backup the initial state of the instance
+      if (!this._init && this.backup && !this._backupStore ){
+        this.backup()
+      }
 
 			val = this[property] = (value === null ? //if the value is null or undefined
 			null : // it should be null
@@ -1448,17 +1372,17 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			}
 			callback && callback.apply(this, args);
 
-//			//if this class has a global list, add / remove from the list.
-//			if ( property === Class.id && val !== null && Class.list ) {
-//				// if we didn't have an old id, add ourselves
-//				if (!old ) {
-//					Class.list.push(this);
-//				} else if ( old != val ) {
-//					// if our id has changed ... well this should be ok
-//					Class.list.remove(old);
-//					Class.list.push(this);
-//				}
-//			}
+			//if this class has a global list, add / remove from the list.
+			if ( property === Class.id && val !== null && list ) {
+				// if we didn't have an old id, add ourselves
+				if (!old ) {
+					list.push(this);
+				} else if ( old != val ) {
+					// if our id has changed ... well this should be ok
+					list.remove(old);
+					list.push(this);
+				}
+			}
 
 		},
 		
@@ -1474,7 +1398,8 @@ steal('jquery/class', 'jquery/lang/string', function() {
 		 */
 		removeAttr: function(attr){
 			var old = this[attr],
-				deleted = false;
+				deleted = false,
+				attrs = this.constructor.attributes;
 			
 			//- pop it off the object
 			if(this[attr]){
@@ -1482,8 +1407,8 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			}
 			
 			//- pop it off the Class attributes collection
-			if(this.Class.attributes[attr]){
-				delete this.Class.attributes[attr];
+			if(attrs[attr]){
+				delete attrs[attr];
 				deleted = true;
 			}
 			
@@ -1510,16 +1435,18 @@ steal('jquery/class', 'jquery/lang/string', function() {
 		 * @return {Object} the current attributes of the model
 		 */
 		attrs: function( attributes ) {
-			var key;
+			var key,
+				constructor  = this.constructor,
+				attrs = constructor.attributes;
 			if (!attributes ) {
 				attributes = {};
-				for ( key in this.Class.attributes ) {
-					if ( this.Class.attributes.hasOwnProperty(key) ) {
+				for ( key in attrs ) {
+					if ( attrs.hasOwnProperty(key) ) {
 						attributes[key] = this.attr(key);
 					}
 				}
 			} else {
-				var idName = this.Class.id;
+				var idName = constructor.id;
 				//always set the id last
 				for ( key in attributes ) {
 					if ( key != idName ) {
@@ -1533,32 +1460,60 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			}
 			return attributes;
 		},
-		serialize : function(backend){
-      var Class = this.Class,
-        attrs = Class.attributes,
-        type,
-        converter,
-        data = {},
-        attr,
-        instruction;
+		serialize : function(attr){
+			var self= this,
+        Class = this.constructor,
+				attrs = Class.attributes,
+				type,
+				converter,
+				data = {},
 
-        attributes = {};
+        serialize = function(attr){
+          type = attrs[attr];
+          converter = Class.serialize[type] || Class.serialize['default'];
+          return converter( self[attr] , type );
+        };
+
+      if (attr){
+        return serialize(attr)
+      }
 
       for ( attr in attrs ) {
         if ( attrs.hasOwnProperty(attr) ) {
-          type = attrs[attr];
-          converter = Class.serialize[type] || Class.serialize['default'];
-          if (backend && Class.backendSerialize.hasOwnProperty(attr)){
-            instruction = Class.backendSerialize[attr]
-            if (instruction != false && (!instruction['if'] || (instruction['if'].call(this, this[attr])))){
-              data[instruction['key'] || attr] = converter( this[attr] , type );
-            }
-          } else {
-            data[attr] = converter( this[attr] , type );
-          }
+          data[attr] = serialize(attr)
         }
       }
       return data;
+
+		},
+    makeParams: function(nested){
+      var Class = this.constructor,
+				attrs = Class.attributes,
+        params = Class.params,
+        nested = nested || false,
+				type,
+				attr,
+        changed,
+        param,
+        data = {};
+
+      if (nested){
+        data[Class.id] = getId(this); //ensure id is set for nested assoc
+      }
+
+      for ( attr in attrs ){
+        param = params[attr] == undefined ? {} : params[attr];
+        type = attrs[attr];
+        changed = !this.changed || this.changed(attr) ;
+        if ( (param != false && changed)
+          && (!param['if'] || param['if'].call(this, this[attr],type) == true)
+          && (!param['unless'] || param['unless'].call(this, this[attr],type) == false) )
+        {
+          data[param['as'] || attr] =  isObject(this[attr]) && this[attr].makeParams ? this[attr].makeParams(true) : this.serialize(attr) ;
+        }
+      }
+
+      return data
     },
 		/**
 		 * Returns if the instance is a new object.  This is essentially if the
@@ -1621,8 +1576,9 @@ steal('jquery/class', 'jquery/lang/string', function() {
 		 * @return {String}
 		 */
 		identity: function() {
-			var id = getId(this);
-			return (this.Class._fullName + '_' + (this.Class.escapeIdentity ? encodeURIComponent(id) : id)).replace(/ /g, '_');
+			var id = getId(this), 
+				constructor = this.constructor;
+			return (constructor._fullName + '_' + (constructor.escapeIdentity ? encodeURIComponent(id) : id)).replace(/ /g, '_');
 		},
 		/**
 		 * Returns elements that represent this model instance.  For this to work, your element's should
@@ -1651,6 +1607,7 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			return $("." + this.identity(), context);
 		},
 		/**
+		 * @hide
 		 * Publishes to OpenAjax.hub
 		 * 
 		 *     $.Model('Task', {
@@ -1670,19 +1627,16 @@ steal('jquery/class', 'jquery/lang/string', function() {
 		 * @param {Object} [data] if missing, uses the instance in {data: this}
 		 */
 		publish: function( event, data ) {
-			this.Class.publish(event, data || this);
+			this.constructor.publish(event, data || this);
 		},
 		hookup: function( el ) {
-			var shortName = this.Class._shortName,
+			var shortName = this.constructor._shortName,
 				models = $.data(el, "models") || $.data(el, "models", {});
 			$(el).addClass(shortName + " " + this.identity());
 			models[shortName] = this;
 		}
 	});
 	
-	// map wrapMany
-	$.Model.wrapMany = $.Model.models;
-	$.Model.wrap = $.Model.model;
 
 	each([
 	/**
@@ -1710,11 +1664,12 @@ steal('jquery/class', 'jquery/lang/string', function() {
 	 */
 	"destroyed"], function( i, funcName ) {
 		$.Model.prototype[funcName] = function( attrs ) {
-			var stub;
+			var stub,
+				constructor = this.constructor;
 			
 			// remove from the list if instance is destroyed
-			if ( funcName === 'destroyed' && this.Class.list ) {
-				this.Class.list.remove(getId(this));
+			if ( funcName === 'destroyed' && constructor.list ) {
+				constructor.list.remove(getId(this));
 			}
 			
 			// update attributes if attributes have been passed
@@ -1725,8 +1680,8 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			this.publish(funcName, this);
 			
 			// call event on the instance's Class
-			$([this.Class]).triggerHandler(funcName, this);
-			return [this].concat(makeArray(arguments)); // return like this for this.callback chains
+			$([constructor]).triggerHandler(funcName, this);
+			return [this].concat(makeArray(arguments)); // return like this for this.proxy chains
 		};
 	});
 
@@ -1755,8 +1710,8 @@ steal('jquery/class', 'jquery/lang/string', function() {
 			each($.data(this, "models") || {}, function( name, instance ) {
 				//either null or the list type shared by all classes
 				kind = kind === undefined ? 
-					instance.Class.List || null : 
-					(instance.Class.List === kind ? kind : null);
+					instance.constructor.List || null : 
+					(instance.constructor.List === kind ? kind : null);
 				collection.push(instance);
 			});
 		});

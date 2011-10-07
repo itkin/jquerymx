@@ -115,6 +115,7 @@ See this in action:
 				return !same(this.serialize(), this._backupStore, !!checkAssociations);
 			}
 		},
+
 		/**
 		 * @function jQuery.Model.prototype.restore
 		 * @parent jquery.model.backup
@@ -126,7 +127,36 @@ See this in action:
 			this.attrs(props);   
 			
 			return this;
-		}
+		},
+
+    changed: function(attr) {
+      var self= this,
+          attrs = this.Class.attributes,
+          changes = [],
+          changed = function(attr){
+            // consider all attr as changed when instance is new
+            if (self.isNew()){
+              return true
+            }
+            // check assoc by calling their changed function individually
+            if (typeof self[attr] == 'object' && self[attr] !== null && self[attr].changed && self[attr].changed().length){
+              return true
+            }
+            // check attributes and plural assoc
+            if ( (self._backupStore && !same(self.serialize(attr), self._backupStore[attr]))){
+              return true
+            }
+          }
+      if (attr){
+        return changed(attr)
+      }
+      for (attr in attrs) {
+        if ( changed(attr) ){
+          changes.push(attr)
+        }
+      }
+      return changes
+    }
 	   
    })
 })
