@@ -133,7 +133,14 @@ steal('jquery/event').then(function( $ ) {
               // call the event
               $.event.handle.call(child, ev);
             } else {
-              ev.stopPropagation()
+							// move index until the item is not in the current child
+							while (++index < length && (sub = resizers[index]) ) {
+								if (!$.contains(child, sub) ) {
+									// set index back one
+									index--;
+									break
+								}
+							}
             }
 
 
