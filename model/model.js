@@ -1495,17 +1495,15 @@ steal('jquery/class', 'jquery/lang/string', function() {
 				attr,
         changed,
         param,
-        data = {};
+        data = {},
+        prefixedData = {};
 
-      if (nested){
-        data[Class.id] = getId(this); //ensure id is set for nested assoc
-      }
 
       for ( attr in attrs ){
         param = params[attr] == undefined ? {} : params[attr];
         type = attrs[attr];
         changed = !this.changed || this.changed(attr) ;
-        if ( (param != false && changed)
+        if ( (param != false && (changed || param == true))
           && (!param['if'] || param['if'].call(this, this[attr],type) == true)
           && (!param['unless'] || param['unless'].call(this, this[attr],type) == false) )
         {
@@ -1513,6 +1511,9 @@ steal('jquery/class', 'jquery/lang/string', function() {
         }
       }
 
+      if (nested){
+        data[Class.id] = getId(this); //ensure id is set for nested assoc
+      }
       return data
     },
 		/**
