@@ -54,17 +54,14 @@ $.Model.List.extend("jQuery.Model.List.Cookie",
 	 * @return {jQuery.Model} returns this model instance.
 	 */
 	retrieve : function(name){
-		// each also needs what they are referencd by ?
-		var props = $.cookie( name ) || {type : null, ids : []},
-			instances = [],
-			Class = props.type ? $.String.getObject(props.type) :  null;
-		for(var i =0; i < props.ids.length;i++){
-			var identity = props.ids[i],
-				instanceData = $.cookie( identity );
-			instances.push( new Class(instanceData) )
-		}
-		this.push.apply(this,instances);
+    var storedData, data
+    storedData =  $.cookie(name) || '{}'
+    if (storedData && storedData.data && storedData.type){
+      data = $.String.getObject(storedData['type']).models(storedData['data'])
+      this.push(data);
+    }
 		return this;
+
 	},
 	/**
 	 * Serializes and saves this list of model instances to the cookie in name.
@@ -72,17 +69,10 @@ $.Model.List.extend("jQuery.Model.List.Cookie",
 	 * @return {jQuery.Model} returns this model instance.
 	 */
 	store : function(name){
-		//  go through and listen to instance updating
-		var ids = [], days = this.days;
-		this.each(function(i, inst){
-			$.cookie(inst.identity(), $.toJSON(inst.attrs()), { expires: days });
-			ids.push(inst.identity());
-		});
-		
-		$.cookie(name, $.toJSON({
-			type: this[0] && this[0].constructor.fullName,
-			ids: ids
-		}), { expires: this.days });
+		$.cookie(name, {
+      data: this.serialize(),
+      type: this[0] && this[0].constructor.fullName
+    }, { expires: this.days });
 		return this;
 	}
 })
