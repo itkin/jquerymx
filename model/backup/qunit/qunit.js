@@ -108,7 +108,7 @@ test('makeParams only save changed attributes and associations', function(){
     attributes: {
       name: 'string',
       category: 'Category.model',
-      loans: 'Loans.model'
+      loans: 'Loan.models'
     }
   },{})
   $.Model('Category',{},{})
